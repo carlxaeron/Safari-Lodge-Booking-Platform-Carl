@@ -41,20 +41,29 @@ export default function RoomManager() {
     setError('');
     setValidationErrors({});
 
+    // Prepare and trim payload
+    const payload = {
+      name: currentRoom.name?.trim() || '',
+      capacity: Number(currentRoom.capacity),
+      type: currentRoom.type?.trim() || '',
+      description: currentRoom.description?.trim() || '',
+    };
+    console.log('Submitting room payload:', payload);
+
     try {
       if (isEditing && currentRoom.id) {
-        const response = await roomsApi.updateRoom(currentRoom.id, currentRoom);
+        const response = await roomsApi.updateRoom(currentRoom.id, payload);
         if (response.error) {
           handleError(response.error);
         }
       } else {
-        const response = await roomsApi.createRoom(currentRoom as Omit<Room, 'id' | 'createdAt' | 'updatedAt'>);
+        const response = await roomsApi.createRoom(payload);
         if (response.error) {
           handleError(response.error);
         }
       }
 
-      if (validationErrors.length === 0 && Object.keys(validationErrors).length === 0) {
+      if (Object.keys(validationErrors).length === 0) {
         setCurrentRoom({
           name: '',
           capacity: 0,
@@ -64,7 +73,7 @@ export default function RoomManager() {
         setIsEditing(false);
         loadRooms();
       }
-    } catch (err) {
+    } catch {
       setError('An unexpected error occurred');
     }
 
