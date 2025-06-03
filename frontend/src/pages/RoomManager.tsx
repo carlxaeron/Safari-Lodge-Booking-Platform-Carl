@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { roomsApi } from '../services/api';
 import type { Room } from '../types/api';
+import LoadingSpinner from '../components/LoadingSpinner';
 
 export default function RoomManager() {
   const [rooms, setRooms] = useState<Room[]>([]);
@@ -174,7 +175,16 @@ export default function RoomManager() {
                   disabled={isLoading}
                   className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
                 >
-                  {isLoading ? 'Saving...' : isEditing ? 'Update Room' : 'Add Room'}
+                  {isLoading ? (
+                    <div className="flex items-center">
+                      <LoadingSpinner />
+                      <span className="ml-2">Saving...</span>
+                    </div>
+                  ) : isEditing ? (
+                    'Update Room'
+                  ) : (
+                    'Add Room'
+                  )}
                 </button>
                 {isEditing && (
                   <button
@@ -203,7 +213,11 @@ export default function RoomManager() {
         <div className="px-4 py-5 sm:p-6">
           <h3 className="text-lg leading-6 font-medium text-gray-900">Rooms</h3>
           <div className="mt-4">
-            {rooms.length === 0 ? (
+            {isLoading ? (
+              <div className="py-8">
+                <LoadingSpinner />
+              </div>
+            ) : rooms.length === 0 ? (
               <p className="text-gray-500">No rooms added yet.</p>
             ) : (
               <div className="overflow-x-auto">

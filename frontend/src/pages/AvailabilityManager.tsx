@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { availabilityApi, roomsApi } from '../services/api';
 import type { Room, Availability } from '../types/api';
+import LoadingSpinner from '../components/LoadingSpinner';
 
 export default function AvailabilityManager() {
   const [rooms, setRooms] = useState<Room[]>([]);
@@ -155,7 +156,14 @@ export default function AvailabilityManager() {
                   disabled={isLoading}
                   className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
                 >
-                  {isLoading ? 'Adding...' : 'Add Availability'}
+                  {isLoading ? (
+                    <div className="flex items-center">
+                      <LoadingSpinner />
+                      <span className="ml-2">Adding...</span>
+                    </div>
+                  ) : (
+                    'Add Availability'
+                  )}
                 </button>
               </div>
             </form>
@@ -167,7 +175,11 @@ export default function AvailabilityManager() {
         <div className="px-4 py-5 sm:p-6">
           <h3 className="text-lg leading-6 font-medium text-gray-900">Current Availabilities</h3>
           <div className="mt-4">
-            {availabilities.length === 0 ? (
+            {isLoading ? (
+              <div className="py-8">
+                <LoadingSpinner />
+              </div>
+            ) : availabilities.length === 0 ? (
               <p className="text-gray-500">No availabilities added yet.</p>
             ) : (
               <div className="overflow-x-auto">
