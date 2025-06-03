@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: safari-booking-api
+    env: node
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        sync: 'https://safari-booking-api.onrender.com/'
+      - key: JWT_SECRET
+        sync: false
+      - key: PORT
+        value: 3000
+    healthCheckPath: /api/health
+    autoDeploy: true 
