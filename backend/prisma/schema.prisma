@@ -28,11 +28,13 @@ model Room {
   description String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+  availabilities Availability[]
 }
 
 model Availability {
   id        String   @id @default(uuid())
   roomId    String
+  room      Room     @relation(fields: [roomId], references: [id])
   startDate DateTime
   endDate   DateTime
   status    String   @default("available")
