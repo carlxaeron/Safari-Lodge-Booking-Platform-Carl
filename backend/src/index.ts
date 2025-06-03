@@ -5,6 +5,7 @@ import { PrismaClient } from '@prisma/client';
 import authRoutes from './routes/auth.routes';
 import roomRoutes from './routes/room.routes';
 import availabilityRoutes from './routes/availability.routes';
+import { errorHandler } from './middleware/error.middleware';
 
 // Load environment variables
 dotenv.config();
@@ -26,6 +27,9 @@ app.use('/api/availability', availabilityRoutes);
 app.get('/health', (req, res) => {
   res.json({ status: 'ok' });
 });
+
+// Error handling middleware (should be last)
+app.use(errorHandler);
 
 // Start server
 app.listen(port, () => {
