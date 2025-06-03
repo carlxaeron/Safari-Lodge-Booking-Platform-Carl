@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react';
 import { roomsApi } from '../services/api';
-import type { Room } from '../types/api';
+import type { Room, ValidationError } from '../types/api';
 import LoadingSpinner from '../components/LoadingSpinner';
 
 export default function RoomManager() {
   const [rooms, setRooms] = useState<Room[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
   const [isEditing, setIsEditing] = useState(false);
   const [currentRoom, setCurrentRoom] = useState<Partial<Room>>({
     name: '',
@@ -22,6 +23,7 @@ export default function RoomManager() {
   const loadRooms = async () => {
     setIsLoading(true);
     setError('');
+    setValidationErrors({});
 
     const response = await roomsApi.getRooms();
     if (response.error) {
@@ -37,21 +39,22 @@ export default function RoomManager() {
     e.preventDefault();
     setIsLoading(true);
     setError('');
+    setValidationErrors({});
 
     try {
       if (isEditing && currentRoom.id) {
         const response = await roomsApi.updateRoom(currentRoom.id, currentRoom);
         if (response.error) {
-          setError(response.error.message);
+          handleError(response.error);
         }
       } else {
         const response = await roomsApi.createRoom(currentRoom as Omit<Room, 'id' | 'createdAt' | 'updatedAt'>);
         if (response.error) {
-          setError(response.error.message);
+          handleError(response.error);
         }
       }
 
-      if (!error) {
+      if (validationErrors.length === 0 && Object.keys(validationErrors).length === 0) {
         setCurrentRoom({
           name: '',
           capacity: 0,
@@ -61,16 +64,30 @@ export default function RoomManager() {
         setIsEditing(false);
         loadRooms();
       }
-    } catch {
+    } catch (err) {
       setError('An unexpected error occurred');
     }
 
     setIsLoading(false);
   };
 
+  const handleError = (error: { message: string; errors?: ValidationError[] }) => {
+    setError(error.message);
+    
+    if (error.errors) {
+      const newValidationErrors: Record<string, string> = {};
+      error.errors.forEach((err) => {
+        const field = err.path[0];
+        newValidationErrors[field] = err.message;
+      });
+      setValidationErrors(newValidationErrors);
+    }
+  };
+
   const handleEdit = (room: Room) => {
     setCurrentRoom(room);
     setIsEditing(true);
+    setValidationErrors({});
   };
 
   const handleDelete = async (id: number) => {
@@ -78,10 +95,11 @@ export default function RoomManager() {
 
     setIsLoading(true);
     setError('');
+    setValidationErrors({});
 
     const response = await roomsApi.deleteRoom(id);
     if (response.error) {
-      setError(response.error.message);
+      handleError(response.error);
     } else {
       loadRooms();
     }
@@ -119,9 +137,14 @@ export default function RoomManager() {
                     id="name"
                     value={currentRoom.name}
                     onChange={(e) => setCurrentRoom({ ...currentRoom, name: e.target.value })}
-                    className="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"
+                    className={`mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md ${
+                      validationErrors.name ? 'border-red-300' : ''
+                    }`}
                     required
                   />
+                  {validationErrors.name && (
+                    <p className="mt-1 text-sm text-red-600">{validationErrors.name}</p>
+                  )}
                 </div>
 
                 <div className="col-span-6 sm:col-span-3">
@@ -135,9 +158,14 @@ export default function RoomManager() {
                     min="1"
                     value={currentRoom.capacity}
                     onChange={(e) => setCurrentRoom({ ...currentRoom, capacity: Number(e.target.value) })}
-                    className="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"
+                    className={`mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md ${
+                      validationErrors.capacity ? 'border-red-300' : ''
+                    }`}
                     required
                   />
+                  {validationErrors.capacity && (
+                    <p className="mt-1 text-sm text-red-600">{validationErrors.capacity}</p>
+                  )}
                 </div>
 
                 <div className="col-span-6 sm:col-span-3">
@@ -150,9 +178,14 @@ export default function RoomManager() {
                     id="type"
                     value={currentRoom.type}
                     onChange={(e) => setCurrentRoom({ ...currentRoom, type: e.target.value })}
-                    className="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"
+                    className={`mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md ${
+                      validationErrors.type ? 'border-red-300' : ''
+                    }`}
                     required
                   />
+                  {validationErrors.type && (
+                    <p className="mt-1 text-sm text-red-600">{validationErrors.type}</p>
+                  )}
                 </div>
 
                 <div className="col-span-6">
@@ -165,8 +198,13 @@ export default function RoomManager() {
                     rows={3}
                     value={currentRoom.description}
                     onChange={(e) => setCurrentRoom({ ...currentRoom, description: e.target.value })}
-                    className="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"
+                    className={`mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md ${
+                      validationErrors.description ? 'border-red-300' : ''
+                    }`}
                   />
+                  {validationErrors.description && (
+                    <p className="mt-1 text-sm text-red-600">{validationErrors.description}</p>
+                  )}
                 </div>
               </div>
               <div className="mt-6 flex space-x-3">
@@ -197,6 +235,7 @@ export default function RoomManager() {
                         type: '',
                         description: '',
                       });
+                      setValidationErrors({});
                     }}
                     className="inline-flex justify-center py-2 px-4 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
                   >

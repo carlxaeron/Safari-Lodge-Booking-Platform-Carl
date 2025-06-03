@@ -26,13 +26,18 @@ export interface Availability {
   updatedAt: string;
 }
 
+export interface ValidationError {
+  code: string;
+  expected: string;
+  received: string;
+  path: string[];
+  message: string;
+}
+
 export interface ApiError {
   status: 'error';
   message: string;
-  errors?: Array<{
-    path: string[];
-    message: string;
-  }>;
+  errors?: ValidationError[];
 }
 
 export interface ApiResponse<T> {
